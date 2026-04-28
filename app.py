@@ -5,6 +5,8 @@ import winsound
 import csv
 from datetime import datetime
 
+GROUP_NUM = "X"
+
 class GrilApp:
     def __init__(self, root):
         self.root = root
@@ -24,8 +26,7 @@ class GrilApp:
         tk.Label(root, text="TEPLOTA MÄSA", font=("Arial", 10, "bold"), bg="#0F0F11", fg="gray").pack(pady=(20, 0))
         self.label_maso = tk.Label(root, text="--.-°", font=("Arial", 60, "bold"), bg="#0F0F11", fg="#00bbff")
         self.label_maso.pack()
-        tk.Scale(root, from_=40, to=100, orient="horizontal", variable=self.target_maso).pack(fill="x", padx=60)
-
+        tk.Scale(root, from_=40, to=100, orient="horizontal", variable=self.target_maso,command=self.on_target_change).pack(fill="x", padx=60)
         tk.Label(root, text="TEPLOTA V GRILE", font=("Arial", 10, "bold"), bg="#0F0F11", fg="gray").pack(pady=(30, 0))
         self.label_gril = tk.Label(root, text="--.-°", font=("Arial", 60, "bold"), bg="#0F0F11", fg="#ffffff")
         self.label_gril.pack()
@@ -36,6 +37,10 @@ class GrilApp:
 
         self.setup_mqtt()
 
+    def on_target_change(self, val):
+        payload = json.dumps({"target": float(val)})
+        self.client.publish(f"IoTProject/{GROUP_NUM}/grill/target", payload)
+    
     def sound_ok(self):
         #right temp
         winsound.Beep(1000, 300)
@@ -61,7 +66,7 @@ class GrilApp:
         self.client.on_disconnect = self.on_disconnect
         self.client.on_message = self.on_message
         try:
-            self.client.connect_async("broker.hivemq.com", 1883, 60)
+            self.client.connect_async("147.229.148.105", 11883, 60)
             self.client.loop_start()
         except:
             self.status_bar.config(text="Status: Chyba siete", fg="red")
@@ -69,7 +74,7 @@ class GrilApp:
     def on_connect(self, client, userdata, flags, rc):
         if rc == 0:
             self.status_bar.config(text="Status: Online", fg="#00ff00")
-            self.client.subscribe("iot/masterchef/data")
+            self.client.subscribe(f"IoTProject/{GROUP_NUM}/grill/teplota")
         else:
             self.status_bar.config(text="Status: Chyba pripojenia", fg="red")
 
