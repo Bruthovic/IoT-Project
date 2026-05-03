@@ -38,23 +38,65 @@ Programové řešení pro bezdrátový teploměr měřící teplotu uvnitř masa
 
 ### Nástroje
 - Thonny IDE pro vývoj a nahrávání MicroPython firmwaru do zařízení  
-- Visual Studio Code pro vývoj desktopové aplikace v Pythonu  
+- Visual Studio Code pro vývoj desktopové aplikace v Pythonu
+- open-source MQTT broker **Eclipse Mosquitto**, který zajišťuje směrování zpráv mezi teploměrem a uživatelskou aplikací (https://mosquitto.org/).
+
+## Závislosti
+**Závislosti pro Pico W:**
+
+- `umqtt.simple` (modul `simple.py` z umqtt) — MQTT klient
+- `ahtx0.py` — driver pro AHT20
+
+**Závislosti pro desktop aplikaci:**
+
+```bash
+pip install paho-mqtt
+# tkinter je součástí standardní Python distribuce
+# pro Linux zvuk: sudo apt install sox  (kvůli příkazu `play`)
+```
+
 
 ## Instalace a spuštění
-### thermometer.py
-Firmware pro teploměr (soubor thermometer.py) je napsán v jazyce MicroPython a vyvíjen v prostředí Thonny IDE.
-Požadované nástroje pro spuštění:
-- Thonny IDE (nejnovší verze)
-- microUSB kabel pro připojení desky k počítači
-- nainstalovaný MicroPython firmware pro použitou desku
 
-Nahrání projektu do mikrokontroléru:
-1. V Thonny otevřete soubor projektu `thermometer.py`
-2. Nahrajte soubor `thermometer.py` do zařízení (volba **Upload to /**)
-3. Spustěte projekt
+### 1) MQTT broker
 
-### app.py
-Desktopová aplikace je napsána v jazyce Python.
+spuštění Mosquitto na portu **11883**:
+
+```bash
+# Linux (Arch/Debian/Ubuntu)
+mosquitto -p 11883 -v
+```
+
+> Pro produkční nasazení nakonfigurujte `mosquitto.conf` s autentizací a TLS.
+
+### 2) Konfigurace firmwaru
+
+V souboru `thermometer.py` upravte:
+
+```python
+WIFI_SSID = "..."          # název Wi-Fi sítě
+WIFI_PWD  = "..."          # heslo Wi-Fi
+BROKER_IP = "..."          # IP adresa notebooku s brokerem
+BROKER_PORT = 11883
+GROUP_NUM = "9"            # identifikátor skupiny v MQTT topiku
+```
+
+### 3) Nahrání firmwaru na Pico W
+
+1. Nainstalujte na Pico W MicroPython firmware (`.uf2` z [micropython.org](https://micropython.org/download/RPI_PICO_W/)).
+2. Pomocí [Thonny](https://thonny.org) nebo `mpremote` nahrajte:
+   - `thermometer.py` jako `main.py`
+   - `simple.py` (umqtt klient)
+   - `ahtx0.py` (driver senzoru)
+
+```bash
+mpremote cp thermometer.py :main.py
+mpremote cp simple.py :
+mpremote cp ahtx0.py :
+mpremote reset
+```
+
+### 4) Spuštění desktop aplikace app.py
 
 **Windows**
 
@@ -98,6 +140,19 @@ Spusťte aplikaci:
    ```bash
    python3 app.py
    ```
+
+V aplikaci nastavte slidery na požadovanou teplotu masa a grilu a klikněte na **ODESLAŤ NASTAVENIA**. Aplikace začne přijímat naměřená data a zobrazovat je v reálném čase.
+
+### MQTT topiky a formát zpráv
+
+| Topik                              | Směr            | Payload (JSON)                       |
+|------------------------------------|-----------------|--------------------------------------|
+| `IoTProject/9/grill/teplota`       | Pico -> app     | `{"maso": 62.4, "gril": 187.3}`      |
+| `IoTProject/9/grill/Tmaso`         | app -> Pico     | `{"masoTarget": 75.0}`               |
+| `IoTProject/9/grill/Tgrill`        | app -> Pico     | `{"grillTarget": 200.0}`             |
+
+Hodnoty teploty jsou v °C, zaokrouhleny na jedno desetinné místo.
+
 ## Autoři
 - Ema Ondrušková
 - Adam Behúň
@@ -256,76 +311,6 @@ V adaptivním režimu to odpovídá zhruba **10–20 grilovacím cyklům po 6 ho
     └── technicka_cast_hw_uspora_iotmasterchef.docx   # technická dokumentace
 ```
 
-**Závislosti pro Pico W (MicroPython):**
-
-- `umqtt.simple` (modul `simple.py` z umqtt) — MQTT klient
-- `ahtx0.py` — driver pro AHT20
-
-**Závislosti pro desktop aplikaci:**
-
-```bash
-pip install paho-mqtt
-# tkinter je součástí standardní Python distribuce
-# pro Linux zvuk: sudo apt install sox  (kvůli příkazu `play`)
-```
-
-### Instalace a spuštění
-
-#### 1) MQTT broker
-
-Na notebooku spusťte Mosquitto na portu **11883**:
-
-```bash
-# Linux (Arch/Debian/Ubuntu)
-mosquitto -p 11883 -v
-```
-
-> Pro produkční nasazení nakonfigurujte `mosquitto.conf` s autentizací a TLS.
-
-#### 2) Konfigurace firmwaru
-
-V souboru `thermometer.py` upravte:
-
-```python
-WIFI_SSID = "..."          # název Wi-Fi sítě
-WIFI_PWD  = "..."          # heslo Wi-Fi
-BROKER_IP = "..."          # IP adresa notebooku s brokerem
-BROKER_PORT = 11883
-GROUP_NUM = "9"            # identifikátor skupiny v MQTT topiku
-```
-
-#### 3) Nahrání firmwaru na Pico W
-
-1. Nainstalujte na Pico W MicroPython firmware (`.uf2` z [micropython.org](https://micropython.org/download/RPI_PICO_W/)).
-2. Pomocí [Thonny](https://thonny.org) nebo `mpremote` nahrajte:
-   - `thermometer.py` jako `main.py`
-   - `simple.py` (umqtt klient)
-   - `ahtx0.py` (driver senzoru)
-
-```bash
-mpremote cp thermometer.py :main.py
-mpremote cp simple.py :
-mpremote cp ahtx0.py :
-mpremote reset
-```
-
-#### 4) Spuštění desktop aplikace
-
-```bash
-python app.py
-```
-
-V aplikaci nastavte slidery na požadovanou teplotu masa a grilu a klikněte na **ODESLAŤ NASTAVENIA**. Aplikace začne přijímat naměřená data a zobrazovat je v reálném čase.
-
-### MQTT topiky a formát zpráv
-
-| Topik                              | Směr            | Payload (JSON)                       |
-|------------------------------------|-----------------|--------------------------------------|
-| `IoTProject/9/grill/teplota`       | Pico → app      | `{"maso": 62.4, "gril": 187.3}`      |
-| `IoTProject/9/grill/Tmaso`         | app → Pico      | `{"masoTarget": 75.0}`               |
-| `IoTProject/9/grill/Tgrill`        | app → Pico      | `{"grillTarget": 200.0}`             |
-
-Hodnoty teploty jsou ve °C, zaokrouhleny na jedno desetinné místo.
 
 ---
 
