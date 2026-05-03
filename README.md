@@ -224,7 +224,7 @@ Hodnoty teploty jsou v °C, zaokrouhleny na jedno desetinné místo.
 
 ## Známá omezení
 
-- **AHT20 jako teplotní senzor** - slouží pouze jako laboratorní prototyp, je nevhodný pro reálné měření teploty masa i grilu. Pro reálnnou apliakci viz [Senzory: prototyp vs. reálné nasazení](#senzory-prototyp-vs-reálné-nasazení).
+- **AHT20 jako teplotní senzor** - slouží pouze jako laboratorní prototyp, je nevhodný pro reálné měření teploty masa i grilu. Pro reálnnou apliakci viz `docs/technicka_cast_hw_uspora_iotmasterchef.docx`.
 - **Sleep režim** — v současné implementaci je použit `time.sleep()` v hlavní smyčce. Pro skutečné dosažení odhadované výdrže by bylo potřeba implementovat `machine.lightsleep()` mezi cykly měření a explicitně deaktivovat WLAN po publikaci. Aktuální kód funguje jako funkční prototyp; energetická optimalizace je rozpracována v technické dokumentaci.
 - **MQTT bez autentizace** — broker je pro účely projektu spuštěn bez TLS a bez hesla. Pro reálné nasazení použijte `mosquitto.conf` s `password_file` a TLS certifikáty.
 
