@@ -17,7 +17,12 @@ Programové řešení pro bezdrátový teploměr měřící teplotu uvnitř masa
 ---
 
 ## Instalace a spuštění
-# Aplikace
+### thermometer.py
+Firmware pro teploměr (soubor thermometer.py) je napsán v MicroPython a vyvíjen v prostředí Thonny IDE.
+Požadované nástroje pro spuštění:
+- Thonny IDE (nejnovší verze)
+- microUSB kabel pro připojení desky k počítači
+## Aplikace
 
 ## Obsah
 
