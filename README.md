@@ -16,6 +16,18 @@ Programové řešení pro bezdrátový teploměr měřící teplotu uvnitř masa
 - Indikace online/offline stavu připojení na server
 
 ---
+### Struktura projektu
+
+```
+.
+├── README.md                                  # tento soubor
+├── thermometer.py                             # firmware pro Pico W (MicroPython)
+├── app.py                                     # desktop dashboard (Python 3 + Tkinter)
+└── docs/
+    └── technicka_cast_hw_uspora_iotmasterchef.docx   # technická dokumentace
+```
+
+---
 ## Použité technologie
 ### HW:
 - 2 teplotní senzory AHT20
@@ -153,11 +165,7 @@ V aplikaci nastavte slidery na požadovanou teplotu masa a grilu a klikněte na 
 
 Hodnoty teploty jsou v °C, zaokrouhleny na jedno desetinné místo.
 
-## Autoři
-- Ema Ondrušková
-- Adam Behúň
--
--
+
 
 
 ----
@@ -190,97 +198,7 @@ Hodnoty teploty jsou v °C, zaokrouhleny na jedno desetinné místo.
 
 ---
 
-## Teoretická část — zdůvodnění návrhu
 
-> Detailní technický popis včetně tabulek porovnání, výpočtů spotřeby a alternativ je v samostatném dokumentu `docs/technicka_cast_hw_uspora_iotmasterchef.docx`. Následuje stručné shrnutí.
-
-### Volba platformy: Raspberry Pi Pico W
-
-Jako MCU bylo zvoleno **Raspberry Pi Pico W**. Důvody:
-
-- dostupnost ve školním prostředí,
-- dostatečný výkon pro měření, agregaci dat a Wi-Fi/MQTT komunikaci,
-- podpora MicroPythonu (rychlý vývoj),
-- I2C rozhraní pro připojení teplotních senzorů,
-- vestavěná Wi-Fi konektivita.
-
-> **Poznámka:** Wi-Fi nebyla zvolena proto, že ji Pico W nativně podporuje — Pico W je pouze platforma pro realizaci. Volba Wi-Fi je zdůvodněna níže nezávisle na použitém HW.
-
-### Volba bezdrátové technologie: Wi-Fi
-
-Zařízení je provozováno v blízkosti rodinného domu (např. pod pergolou), kde lze realisticky předpokládat dostupnost domácí Wi-Fi sítě. Wi-Fi umožňuje **přímé připojení na notebook/lokální server bez další gateway**.
-
-| Technologie  | Hodnocení pro projekt                                                                |
-|--------------|---------------------------------------------------------------------------------------|
-| **Wi-Fi**    | **Zvolena** — přímé spojení s notebookem, dostupnost v domácnosti, bez gateway        |
-| BLE          | Nízká spotřeba, ale menší dosah a horší integrace se serverem                         |
-| Zigbee       | Nízká spotřeba, ale vyžaduje koordinátor/gateway — pro 1 zařízení zbytečně složité    |
-| LoRa         | Velký dosah je pro domácí gril zbytečný; nutná gateway                                |
-| NB-IoT       | Vyžaduje SIM, operátora a pokrytí — nepřiměřeně komplikované pro lokální použití      |
-
-Hlavní nevýhodou Wi-Fi je vyšší spotřeba — řešena cyklickým provozním režimem (viz [Úspora energie](#úspora-energie-a-adaptivní-interval)).
-
-### Volba aplikačního protokolu: MQTT
-
-Protokolem aplikační vrstvy je **MQTT** (publish/subscribe model nad TCP). Vhodné pro telemetrická data odesílaná v pravidelných intervalech.
-
-| Vlastnost                        | MQTT                              | CoAP                              |
-|----------------------------------|-----------------------------------|-----------------------------------|
-| Komunikační model                | Publish/subscribe                 | Request/response (REST nad UDP)   |
-| Typické použití                  | Telemetrie, senzory, události     | Přístup ke zdrojům zařízení       |
-| Provoz s úsporným režimem        | Snadné: zobudit → publish → sleep | Méně výhodné                      |
-| **Vhodnost pro projekt**         | **Velmi vhodné**                  | Použitelné, ale méně praktické    |
-
-MQTT umožňuje, aby zařízení **publikovalo data a šlo spát** — nemusí být trvale dostupné jako server (což by CoAP REST model vyžadoval). Pro broker se používá Mosquitto na notebooku.
-
-### Senzory: prototyp vs. reálné nasazení
-
-Ve školním prototypu jsou použity **dva senzory AHT20** (I2C, 3.3 V). AHT20 je dostupný školní senzor vhodný pro **ověření principu** — čtení dat z I2C, zpracování, odeslání přes MQTT.
-
-> ⚠️ **AHT20 NENÍ vhodný pro reálné nasazení v grilu.** Je to senzor okolního prostředí (teplota + vlhkost), s rozsahem max. ~85 °C. Není určen k zapichování do potraviny ani k vystavení vysokým teplotám v grilu. V prototypu slouží pouze pro demonstraci datového toku.
-
-Pro **reálné nasazení** je v technickém návrhu doporučena tato kombinace:
-
-| Měřená veličina         | Doporučený senzor                                  | Důvod                                            |
-|-------------------------|----------------------------------------------------|--------------------------------------------------|
-| Teplota potraviny       | **DS18B20** v kovové sondě (1-Wire)                | Rozsah ~50–90 °C, jednoduché zapojení            |
-| Teplota prostoru grilu  | **Termočlánek typu K + MAX6675 / MAX31855** (SPI)  | Rozsah ~150–300 °C, odolnost v prostředí grilu   |
-
-### Napájení a výdrž baterie
-
-Zařízení je napájeno **Li-Ion článkem 18650** (3.7 V, ~2600 mAh) doplněným o:
-
-- nabíjecí modul **TP4056** s ochranou proti podvybití,
-- mechanický vypínač (zařízení je aktivní pouze během grilování).
-
-Důvody volby 18650 oproti alternativám: vysoká kapacita, schopnost dodat proudové špičky při Wi-Fi vysílání, opakovaná nabíjitelnost, běžná dostupnost.
-
-### Úspora energie a adaptivní interval
-
-Největším zdrojem spotřeby je Wi-Fi vysílání. Implementovaná opatření:
-
-**1. Cyklický provozní režim** — zařízení se zobudí, změří, odešle, přijme cílovou teplotu, odpojí se a jde spát.
-
-**2. Adaptivní interval** — frekvence měření závisí na vzdálenosti od cílové teploty:
-
-| Rozdíl od cíle | Interval | Konstanta v kódu |
-|----------------|----------|------------------|
-| > 20 °C        | 30 s     | `INTERVAL_FAR`    |
-| 5–20 °C        | 10 s     | `INTERVAL_MEDIUM` |
-| < 5 °C         | 5 s      | `INTERVAL_CLOSE`  |
-| dosaženo       | alarm    | —                |
-
-Logika: na začátku grilování se teplota mění pomalu, časté odesílání není potřeba. Při blížení se k cíli interval klesá pro rychlou odezvu.
-
-**Odhadovaná výdrž** (kapacita 2080 mAh využitelně, aktivní odběr 100 mA, sleep 2 mA, 4 s aktivní fáze):
-
-| Konstantní interval 30 s | Konstantní interval 10 s | Konstantní interval 5 s | **Adaptivní režim**       |
-|--------------------------|--------------------------|-------------------------|---------------------------|
-| ~138 h                   | ~50 h                    | ~26 h                   | **~80–120 h**             |
-
-V adaptivním režimu to odpovídá zhruba **10–20 grilovacím cyklům po 6 hodinách** mezi nabíjeními.
-
----
 
 ## Reálné provedení
 
@@ -300,18 +218,6 @@ V adaptivním režimu to odpovídá zhruba **10–20 grilovacím cyklům po 6 ho
 | AHT20 (maso)        | I2C1      | GP3     | GP2     |
 | AHT20 (gril)        | I2C0      | GP5     | GP4     |
 
-### Struktura projektu
-
-```
-.
-├── README.md                                  # tento soubor
-├── thermometer.py                             # firmware pro Pico W (MicroPython)
-├── app.py                                     # desktop dashboard (Python 3 + Tkinter)
-└── docs/
-    └── technicka_cast_hw_uspora_iotmasterchef.docx   # technická dokumentace
-```
-
-
 ---
 
 ## Známá omezení
@@ -321,6 +227,12 @@ V adaptivním režimu to odpovídá zhruba **10–20 grilovacím cyklům po 6 ho
 - **MQTT bez autentizace** — broker je pro účely projektu spuštěn bez TLS a bez hesla. Pro reálné nasazení použijte `mosquitto.conf` s `password_file` a TLS certifikáty.
 
 ---
+## Autoři
+- Ema Ondrušková
+- Adam Behúň
+-
+-
+-----
 
 ## Odkazy
 
