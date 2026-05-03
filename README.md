@@ -174,7 +174,12 @@ Hodnoty teploty jsou v °C, zaokrouhleny na jedno desetinné místo.
 
 
 
-## Architektura řešení
+
+
+
+## Reálné provedení
+
+### Architektura řešení
 
 ```
 ┌────────────────────────────┐                ┌────────────────────────────┐
@@ -200,9 +205,6 @@ Hodnoty teploty jsou v °C, zaokrouhleny na jedno desetinné místo.
 
 ---
 
-
-
-## Reálné provedení
 
 ### Hardware
 
