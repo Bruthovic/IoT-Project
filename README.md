@@ -13,12 +13,36 @@ Programové řešení pro bezdrátový teploměr měřící teplotu uvnitř masa
 - Odesílání cílové teploty na broker server pro použití mikrokontroléru
 - Zvuková notifikace při dosažení cílové teploty i výkyvu z cílové teploty
 - Průběžné ukládání přijaté hodnoty teploty masa a grilu do souboru `data_gril_export.csv` v aktuálním pracovním adresáři. Každý řádek obsahuje čas měření, teplotu masa a teplotu v grilu.
+- Indikace online/offline stavu připojení na server
 
 ---
+## Použité technologie
+### HW:
+- 2 teplotní senzory AHT20
+- Mikrokontrolér Raspberry Pico W
+
+### Komunikace
+- Wi-Fi
+- protokol MQTT pro přenos informací
+- JSON formát zpráv
+  
+### Firmware teploměru
+- programovací jazyk MicroPython
+- MQTT klient
+
+### Desktop aplikace
+- Python
+- Tkinter
+- Knihovna `paho-mqtt`
+- CSV
+
+### Nástroje
+- Thonny IDE pro vývoj a nahrávání MicroPython firmwaru do zařízení  
+- Visual Studio Code pro vývoj desktopové aplikace v Pythonu  
 
 ## Instalace a spuštění
 ### thermometer.py
-Firmware pro teploměr (soubor thermometer.py) je napsán v MicroPython a vyvíjen v prostředí Thonny IDE.
+Firmware pro teploměr (soubor thermometer.py) je napsán v jazyce MicroPython a vyvíjen v prostředí Thonny IDE.
 Požadované nástroje pro spuštění:
 - Thonny IDE (nejnovší verze)
 - microUSB kabel pro připojení desky k počítači
@@ -77,40 +101,12 @@ Spusťte aplikaci:
 ## Autoři
 - Ema Ondrušková
 - Adam Behúň
-- 
-## Obsah
+-
+-
 
-- [Popis projektu](#popis-projektu)
-- [Architektura řešení](#architektura-řešení)
-- [Teoretická část — zdůvodnění návrhu](#teoretická-část--zdůvodnění-návrhu)
-  - [Volba platformy: Raspberry Pi Pico W](#volba-platformy-raspberry-pi-pico-w)
-  - [Volba bezdrátové technologie: Wi-Fi](#volba-bezdrátové-technologie-wi-fi)
-  - [Volba aplikačního protokolu: MQTT](#volba-aplikačního-protokolu-mqtt)
-  - [Senzory: prototyp vs. reálné nasazení](#senzory-prototyp-vs-reálné-nasazení)
-  - [Napájení a výdrž baterie](#napájení-a-výdrž-baterie)
-  - [Úspora energie a adaptivní interval](#úspora-energie-a-adaptivní-interval)
-- [Reálné provedení](#reálné-provedení)
-  - [Hardware](#hardware)
-  - [Struktura projektu](#struktura-projektu)
-  - [Instalace a spuštění](#instalace-a-spuštění)
-  - [MQTT topiky a formát zpráv](#mqtt-topiky-a-formát-zpráv)
-  - [Funkce aplikace](#funkce-aplikace)
-- [Známá omezení](#známá-omezení)
-- [Odkazy](#odkazy)
+----
 
----
 
-## Popis projektu
-
-Cílem projektu je realizace bezdrátového teploměru do grilu, který:
-
-- měří teplotu **uvnitř potraviny** (sonda v mase) a teplotu **v prostoru grilu**,
-- přenáší naměřená data v pravidelných intervalech přes Wi-Fi na server (MQTT broker),
-- zobrazuje hodnoty v reálném čase v uživatelské aplikaci na notebooku,
-- umožňuje uživateli **nastavit cílovou teplotu** masa a grilu,
-- při dosažení cílové teploty spustí **zvukovou notifikaci**,
-- je napájeno bateriově (v okolí grilu nejsou silové ani datové rozvody),
-- využívá **adaptivní interval měření** pro úsporu energie.
 
 ## Architektura řešení
 
@@ -330,27 +326,13 @@ V aplikaci nastavte slidery na požadovanou teplotu masa a grilu a klikněte na 
 
 Hodnoty teploty jsou ve °C, zaokrouhleny na jedno desetinné místo.
 
-### Funkce aplikace
-
-- **Dashboard** s aktuální teplotou masa a grilu (velký font, barevná indikace stavu).
-- **Slidery** pro nastavení cílové teploty masa (0–100 °C) a grilu (0–200 °C).
-- **Tlačítko ODESLAŤ NASTAVENIA** — atomicky odešle obě cílové teploty (zabrání odeslání nedokončeného nastavení během tažení slideru).
-- **Zvuková notifikace** při dosažení / opuštění tolerančního pásma (±5 °C kolem cíle):
-  - dosažení cíle → krátký vyšší tón,
-  - opuštění (např. přetopení) → série pípnutí.
-  - Cross-platform: `winsound` na Windows, `sox`/`play` na Linuxu.
-- **CSV export** — všechny přijaté hodnoty se průběžně zapisují do `data_gril_export.csv` (`HH:MM:SS, maso, gril`).
-- **Indikátor stavu** spojení s brokerem ve spodním řádku.
-
 ---
 
 ## Známá omezení
 
-- **AHT20 jako teplotní senzor** — pouze pro prototypování. Nevhodný pro reálné měření teploty masa (kontaminace, nesprávný formát) ani teploty grilu (max. ~85 °C). Pro reálné nasazení viz [Senzory: prototyp vs. reálné nasazení](#senzory-prototyp-vs-reálné-nasazení).
+- **AHT20 jako teplotní senzor** - slouží pouze jako laboratorní prototyp, je nevhodný pro reálné měření teploty masa i grilu. Pro reálnnou apliakci viz [Senzory: prototyp vs. reálné nasazení](#senzory-prototyp-vs-reálné-nasazení).
 - **Sleep režim** — v současné implementaci je použit `time.sleep()` v hlavní smyčce. Pro skutečné dosažení odhadované výdrže by bylo potřeba implementovat `machine.lightsleep()` mezi cykly měření a explicitně deaktivovat WLAN po publikaci. Aktuální kód funguje jako funkční prototyp; energetická optimalizace je rozpracována v technické dokumentaci.
 - **MQTT bez autentizace** — broker je pro účely projektu spuštěn bez TLS a bez hesla. Pro reálné nasazení použijte `mosquitto.conf` s `password_file` a TLS certifikáty.
-- **Adaptivní interval řízen pouze teplotou masa a grilu** — kód v `thermometer.py` bere `min()` z obou intervalů, takže rychlejší vzorkování jednoho senzoru ovlivňuje i druhý. To je záměrné (chceme rychlou odezvu při blížení k jakékoliv cílové teplotě).
-- **Hardcoded GROUP_NUM** v `app.py` — topiky obsahují `9` natvrdo, na rozdíl od firmware, kde je to konstanta. Při změně skupiny upravte na obou místech.
 
 ---
 
