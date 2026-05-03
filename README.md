@@ -24,6 +24,7 @@ Programové řešení pro bezdrátový teploměr měřící teplotu uvnitř masa
 ├── thermometer.py                             # firmware pro Pico W (MicroPython)
 ├── app.py                                     # desktop dashboard (Python 3 + Tkinter)
 ├── ahtx0.py                                   # aht20 driver teploměru
+├── simple.py                                  # umqtt klient
 └── docs/
     └── technicka_cast_hw_uspora_iotmasterchef.docx   # technická dokumentace
 ```
