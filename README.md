@@ -1,8 +1,23 @@
-# IoTMasterChef — Bezdrátový teploměr do grilu
+# IoTMasterChef - Bezdrátový teploměr do grilu
+Jedná se o projekt do kurzu BPC-IOT na FEKT VUT.
 
-> **BPC-IoT Projekt #5** — Bezdrátový teploměr měřící teplotu uvnitř potraviny a v prostoru grilu, s přenosem dat přes Wi-Fi/MQTT na uživatelskou aplikaci s vizualizací a zvukovou notifikací.
+Programové řešení pro bezdrátový teploměr měřící teplotu uvnitř masa a v prostoru grilu, s přenosem dat přes Wi-Fi prostřednictvím protokolu MQTT. Součástí řešení je i aplikace, která ukládá údaje z teploměrů do formátu .csv a upozorňuje na dosaženou teplotu pomocí zvukové notifikace.
+
+## Funkce mikrokontroléru
+- Měření teploty masa a vnitřního prostoru grilu v reálném čase pomocí mikrokontroléru
+- Pravidelné odesílání naměřených hodnot na broker server v různých intervalech adaptujících se na aktuální nastavenou teplotu v aplikaci vzhledem k úspoře baterie
+
+## Funkce desktop aplikace
+- Převzetí naměřených hodnot ze serveru a jejich zobrazení v reálném čase na zařízení
+- Možnost nastavení cílové teploty masa a grilu pomocí slideru
+- Odesílání cílové teploty na broker server pro použití mikrokontroléru
+- Zvuková notifikace při dosažení cílové teploty i výkyvu z cílové teploty
+- Ukládání naměřených dat z mikrokontroléru do formátu .csv pro možnost zpětného zobrazení dat
 
 ---
+
+## Instalace a spuštění
+# Aplikace
 
 ## Obsah
 
