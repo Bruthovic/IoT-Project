@@ -12,7 +12,7 @@ Programové řešení pro bezdrátový teploměr měřící teplotu uvnitř masa
 - Možnost nastavení cílové teploty masa a grilu pomocí slideru
 - Odesílání cílové teploty na broker server pro použití mikrokontroléru
 - Zvuková notifikace při dosažení cílové teploty i výkyvu z cílové teploty
-- Ukládání naměřených dat z mikrokontroléru do formátu .csv pro možnost zpětného zobrazení dat
+- Průběžné ukládání přijaté hodnoty teploty masa a grilu do souboru `data_gril_export.csv` v aktuálním pracovním adresáři. Každý řádek obsahuje čas měření, teplotu masa a teplotu v grilu.
 
 ---
 
@@ -29,9 +29,55 @@ Nahrání projektu do mikrokontroléru:
 2. Nahrajte soubor `thermometer.py` do zařízení (volba **Upload to /**)
 3. Spustěte projekt.
 
-## app.py
-Desktopová aplikace je napsána v jazyce Python. Pro spuštění je 
+### app.py
+Desktopová aplikace je napsána v jazyce Python.
 
+**Windows**
+
+Pro spuštění aplikace je nutné mít nainstalovaný Python 3 a balíček `paho-mqtt`.
+
+Jednodušší varianta bez virtuálního prostředí:
+```bash
+py -m pip install --upgrade pip
+py -m pip install paho-mqtt
+python app.py
+```
+
+Doporučená varianta s virtuálním prostředím:
+```bash
+py -m venv .venv
+.venv\Scripts\activate
+py -m pip install --upgrade pip
+py -m pip install paho-mqtt
+python app.py
+```
+
+
+**Linux**
+
+Nainstalujte Python 3, Tkinter a SoX:
+   ```bash
+   sudo apt update
+   sudo apt install python3 python3-venv python3-tk sox
+   ```
+V kořenové složce projektu vytvořte a aktivujte virtuální prostředí:
+   ```bash
+   python3 -m venv .venv
+   source .venv/bin/activate
+   ```
+Nainstalujte potřebný Python balíček:
+   ```bash
+   python3 -m pip install --upgrade pip
+   python3 -m pip install paho-mqtt
+   ```
+Spusťte aplikaci:
+   ```bash
+   python3 app.py
+   ```
+## Autoři
+- Ema Ondrušková
+- Adam Behúň
+- 
 ## Obsah
 
 - [Popis projektu](#popis-projektu)
