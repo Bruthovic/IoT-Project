@@ -31,7 +31,7 @@ Programové řešení pro bezdrátový teploměr měřící teplotu uvnitř masa
 - MQTT klient
 
 ### Desktop aplikace
-- Python
+- Python 3
 - Tkinter
 - Knihovna `paho-mqtt`
 - CSV
@@ -51,7 +51,7 @@ Požadované nástroje pro spuštění:
 Nahrání projektu do mikrokontroléru:
 1. V Thonny otevřete soubor projektu `thermometer.py`
 2. Nahrajte soubor `thermometer.py` do zařízení (volba **Upload to /**)
-3. Spustěte projekt.
+3. Spustěte projekt
 
 ### app.py
 Desktopová aplikace je napsána v jazyce Python.
@@ -103,6 +103,7 @@ Spusťte aplikaci:
 - Adam Behúň
 -
 -
+
 
 ----
 
