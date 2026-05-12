@@ -26,7 +26,7 @@ Programové řešení pro bezdrátový teploměr měřící teplotu uvnitř masa
 ├── ahtx0.py                                   # aht20 driver teploměru
 ├── simple.py                                  # umqtt klient
 └── docs/
-    └── technicka_cast_hw_uspora_iotmasterchef.docx   # technická dokumentace
+    └── Dokumentácia.pdf                       # technická dokumentace
 ```
 
 ---
